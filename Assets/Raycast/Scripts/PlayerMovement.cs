@@ -1,5 +1,3 @@
-using UnityEditor;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -15,10 +13,12 @@ public class PlayerMovement : MonoBehaviour
 	private CharacterController _controller;
     private Vector3 _velocity;
 	private float gravity;
-	private bool isJumping = false;
+	private float _maxJumpTime;
+	private bool _isMaxJumpHeightReached = false;
 	private bool _isDoubleJumpPressed = false;
 	private float _jumpBufferCounter = 0f;
 	private float _jumpHangCounter = 0f;
+	private float _jumpTimeCounter = 0f;
 	private float baseSpeed;
 
 	float y = 0f;
@@ -26,6 +26,7 @@ public class PlayerMovement : MonoBehaviour
 	private void Start() {
 		_controller= GetComponent<CharacterController>();
 		baseSpeed = speed;
+		gravity = -9.81f * gravityScale;
 	}
 
 	void Update()
@@ -33,12 +34,14 @@ public class PlayerMovement : MonoBehaviour
 		float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
-		gravity = -9.81f * gravityScale;
-
 		if (IsGrounded()) {
 			y = gravity;
-			isJumping = false;
 			_isDoubleJumpPressed = false;
+			_isMaxJumpHeightReached = false;
+
+			if (Input.GetKeyDown(KeyCode.Space)) {
+				Jump();
+			}
 
 			if (_jumpBufferCounter > 0) {
 				Jump();
@@ -66,6 +69,11 @@ public class PlayerMovement : MonoBehaviour
 				}
 			}
 
+			if (Input.GetKeyUp(KeyCode.Space) && !_isMaxJumpHeightReached) {
+				y = 0f;
+				_isMaxJumpHeightReached = true;
+			}
+
 			if (_jumpBufferCounter > 0) {
 				_jumpBufferCounter -= Time.deltaTime;
 			}
@@ -73,10 +81,14 @@ public class PlayerMovement : MonoBehaviour
 			if (_jumpHangCounter > 0) {
 				_jumpHangCounter -= Time.deltaTime;
 			}
-		}
 
-		if (Input.GetKeyDown(KeyCode.Space) && !isJumping) {
-			Jump();
+			if (_jumpTimeCounter >= _maxJumpTime) {
+				_isMaxJumpHeightReached = true;
+			}
+			else {
+				_jumpTimeCounter += Time.deltaTime;
+				Debug.Log(_jumpTimeCounter);
+			}
 		}
 
 		if (Input.GetKey(KeyCode.LeftShift))
@@ -102,10 +114,12 @@ public class PlayerMovement : MonoBehaviour
 	}
 
 	void Jump() {
-		isJumping = true;
 		y = Mathf.Sqrt(-2.0f * gravity * maxJumpHeight);
+		_maxJumpTime = -(y / gravity);
+		_jumpTimeCounter = 0;
+		_isMaxJumpHeightReached = false;
 		//Debug.Log(2 * (y / gravity));
-		// 2 * (y / gravity); Total jump's time
+		// 2 * (y / gravity); Total jump's time (positive and negative)
 		// Non c'è bisogno di creare un parametro per controllare la durata del salto perchè questa si può cambiare incrementando o diminuendo la gravità.
 	}
 
