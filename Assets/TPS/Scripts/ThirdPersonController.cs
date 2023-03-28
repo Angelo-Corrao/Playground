@@ -1,17 +1,18 @@
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour
-{
-    public float speed = 10f;
-	public float sprintSpeedMultiplier = 0.5f;
-    public float gravityScale = 1f;
+public class ThirdPersonController : MonoBehaviour {
+	public float speed = 10f;
+	public float sprintSpeedMultiplier = 1.5f;
+	public float gravityScale = 1f;
 	public float maxJumpHeight = 2f;
 	public float jumpBufferTimer = 0.15f;
 	public float jumpHangTimer = 0.1f;
 	public LayerMask _groundMask;
+	public Transform body;
+	public float rotationSpeed = 5.0f;
 
 	private CharacterController _controller;
-    private Vector3 _velocity;
+	private Vector3 _velocity;
 	private float gravity;
 	private float _maxJumpTime;
 	private bool _isMaxJumpHeightReached = false;
@@ -20,19 +21,20 @@ public class PlayerMovement : MonoBehaviour
 	private float _jumpHangCounter = 0f;
 	private float _jumpTimeCounter = 0f;
 	private float baseSpeed;
-
-	float y = 0f;
+	private float y = 0f;
+	private Camera mainCam;
 
 	private void Start() {
-		_controller= GetComponent<CharacterController>();
+		_controller = GetComponent<CharacterController>();
 		baseSpeed = speed;
 		gravity = -9.81f * gravityScale;
+		mainCam = Camera.main;
+		Cursor.lockState = CursorLockMode.Locked;
 	}
 
-	void Update()
-    {
+	void Update() {
 		float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
+		float z = Input.GetAxis("Vertical");
 
 		if (IsGrounded()) {
 			y = gravity;
@@ -54,7 +56,7 @@ public class PlayerMovement : MonoBehaviour
 			y += gravity * Time.deltaTime;
 
 			if (Input.GetKeyDown(KeyCode.Space)) {
-				if (_jumpHangCounter <= 0) { 
+				if (_jumpHangCounter <= 0) {
 					if (!_isDoubleJumpPressed) {
 						Jump();
 						_isDoubleJumpPressed = true;
@@ -87,7 +89,6 @@ public class PlayerMovement : MonoBehaviour
 			}
 			else {
 				_jumpTimeCounter += Time.deltaTime;
-				Debug.Log(_jumpTimeCounter);
 			}
 		}
 
@@ -96,18 +97,20 @@ public class PlayerMovement : MonoBehaviour
 		else
 			speed = baseSpeed;
 
-		/* Per far si che il personaggio si fermi esattamente quando si rilascia WASD (quindi senza slittare) invece di
-			GetAxis si può usare GetKey per ogni tasto e quando nessuno di questi viene premuto si imposta la velocity a 0*/ 
 		_velocity = transform.right * x + transform.forward * z;
-		if (_velocity.magnitude > 1)
-			_velocity = _velocity.normalized * speed; // senza normalizzarlo muovendosi in diagonale la velocity aumenta
-		else
-			_velocity *= speed;
-		_velocity.y = y;
+		Vector3 movementToCamSpace = RotatePlayerVector(_velocity);
+		if (movementToCamSpace.x != 0 || movementToCamSpace.z != 0)
+			RotatePlayer(movementToCamSpace);
 
-		Debug.Log(_velocity);
-		_controller.Move(_velocity * Time.deltaTime);
-    }
+		if (movementToCamSpace.magnitude > 1)
+			movementToCamSpace = movementToCamSpace.normalized * speed;
+		else
+			movementToCamSpace *= speed;
+		movementToCamSpace.y = y;
+
+		//Debug.Log(_velocity);
+		_controller.Move(movementToCamSpace * Time.deltaTime);
+	}
 
 	bool IsGrounded() {
 		float spherePositionY = transform.position.y - (_controller.height / 2) + _controller.radius - 0.002f;
@@ -120,9 +123,33 @@ public class PlayerMovement : MonoBehaviour
 		_maxJumpTime = -(y / gravity);
 		_jumpTimeCounter = 0;
 		_isMaxJumpHeightReached = false;
-		//Debug.Log(2 * (y / gravity));
-		// 2 * (y / gravity); Total jump's time (positive and negative)
-		// Non c'è bisogno di creare un parametro per controllare la durata del salto perchè questa si può cambiare incrementando o diminuendo la gravità.
+	}
+
+	Vector3 RotatePlayerVector(Vector3 playerDirection) {
+		Vector3 camForward = mainCam.transform.forward;
+		Vector3 camRight = mainCam.transform.right;
+
+		Vector3 movementToCamSpace = playerDirection.x * camRight + playerDirection.z * camForward;
+		// movementToCamSpace.y = 0;
+		// movementToCamSpace.Normalize();
+
+		return movementToCamSpace;
+	}
+
+	void RotatePlayer(Vector3 movementToCamSpace) {
+		/** BASED ON Y ANGLE **/
+		float targetLocalAngle = Mathf.Atan2(_velocity.x, _velocity.z) * Mathf.Rad2Deg;
+		float targetCameraAngle = mainCam.transform.localEulerAngles.y;
+		float targetAngle = targetLocalAngle + targetCameraAngle;
+		float targetAngleInterpolated = Mathf.LerpAngle(body.localEulerAngles.y, targetAngle, Time.deltaTime * rotationSpeed);
+		body.localRotation = Quaternion.Euler(body.localEulerAngles.x, targetAngleInterpolated, body.localEulerAngles.z);
+
+		/** BASED ON FULL ROTATION **/
+		/*Quaternion currentRotation = body.localRotation;
+		movementToCamSpace.y = 0;
+		Quaternion camSpaceRotation = Quaternion.LookRotation(movementToCamSpace);
+		body.localRotation = Quaternion.Slerp(currentRotation, camSpaceRotation, Time.deltaTime * rotationSpeed);
+		//body.localRotation = camSpaceRotation;*/
 	}
 
 	/*private void OnDrawGizmos() {

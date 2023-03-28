@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Camera : MonoBehaviour
+public class CameraMovement : MonoBehaviour
 {
     public float mouseSensitivityX = 100f;
     public float mouseSensitivityY = 100f;
