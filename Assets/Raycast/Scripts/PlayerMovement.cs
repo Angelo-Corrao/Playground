@@ -87,7 +87,6 @@ public class PlayerMovement : MonoBehaviour
 			}
 			else {
 				_jumpTimeCounter += Time.deltaTime;
-				Debug.Log(_jumpTimeCounter);
 			}
 		}
 
@@ -105,7 +104,6 @@ public class PlayerMovement : MonoBehaviour
 			_velocity *= speed;
 		_velocity.y = y;
 
-		Debug.Log(_velocity);
 		_controller.Move(_velocity * Time.deltaTime);
     }
 
