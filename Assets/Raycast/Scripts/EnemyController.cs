@@ -15,7 +15,7 @@ public class EnemyController : MonoBehaviour
 	}
 
 	public void GetHit(float damage) {
-		float damageInflicted = damage * (1 * enemyStats.defence) * Time.deltaTime;
+		float damageInflicted = damage * enemyStats.defence * Time.deltaTime;
 
 		if (currentHealth - damageInflicted <= 0 && !isDead) {
 			isDead = true;

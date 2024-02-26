@@ -95,11 +95,9 @@ public class PlayerMovement : MonoBehaviour
 		else
 			speed = baseSpeed;
 
-		/* Per far si che il personaggio si fermi esattamente quando si rilascia WASD (quindi senza slittare) invece di
-			GetAxis si può usare GetKey per ogni tasto e quando nessuno di questi viene premuto si imposta la velocity a 0*/ 
 		_velocity = transform.right * x + transform.forward * z;
 		if (_velocity.magnitude > 1)
-			_velocity = _velocity.normalized * speed; // senza normalizzarlo muovendosi in diagonale la velocity aumenta
+			_velocity = _velocity.normalized * speed;
 		else
 			_velocity *= speed;
 		_velocity.y = y;
@@ -118,9 +116,6 @@ public class PlayerMovement : MonoBehaviour
 		_maxJumpTime = -(y / gravity);
 		_jumpTimeCounter = 0;
 		_isMaxJumpHeightReached = false;
-		//Debug.Log(2 * (y / gravity));
-		// 2 * (y / gravity); Total jump's time (positive and negative)
-		// Non c'è bisogno di creare un parametro per controllare la durata del salto perchè questa si può cambiare incrementando o diminuendo la gravità.
 	}
 
 	/*private void OnDrawGizmos() {

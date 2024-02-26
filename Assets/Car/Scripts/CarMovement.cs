@@ -56,7 +56,6 @@ public class CarMovement : MonoBehaviour
 		Vector3 position;
 		Quaternion rotation;
 		wheel.collider.GetWorldPose(out position, out rotation);
-		//wheel.mesh.transform.position = position; // This is not necessary
 		wheel.mesh.transform.rotation = rotation;
 	}
 }

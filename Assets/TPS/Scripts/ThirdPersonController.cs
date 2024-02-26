@@ -108,7 +108,6 @@ public class ThirdPersonController : MonoBehaviour {
 			movementToCamSpace *= speed;
 		movementToCamSpace.y = y;
 
-		//Debug.Log(_velocity);
 		_controller.Move(movementToCamSpace * Time.deltaTime);
 	}
 
@@ -130,26 +129,16 @@ public class ThirdPersonController : MonoBehaviour {
 		Vector3 camRight = mainCam.transform.right;
 
 		Vector3 movementToCamSpace = playerDirection.x * camRight + playerDirection.z * camForward;
-		// movementToCamSpace.y = 0;
-		// movementToCamSpace.Normalize();
 
 		return movementToCamSpace;
 	}
 
 	void RotatePlayer(Vector3 movementToCamSpace) {
-		/** BASED ON Y ANGLE **/
 		float targetLocalAngle = Mathf.Atan2(_velocity.x, _velocity.z) * Mathf.Rad2Deg;
 		float targetCameraAngle = mainCam.transform.localEulerAngles.y;
 		float targetAngle = targetLocalAngle + targetCameraAngle;
 		float targetAngleInterpolated = Mathf.LerpAngle(body.localEulerAngles.y, targetAngle, Time.deltaTime * rotationSpeed);
 		body.localRotation = Quaternion.Euler(body.localEulerAngles.x, targetAngleInterpolated, body.localEulerAngles.z);
-
-		/** BASED ON FULL ROTATION **/
-		/*Quaternion currentRotation = body.localRotation;
-		movementToCamSpace.y = 0;
-		Quaternion camSpaceRotation = Quaternion.LookRotation(movementToCamSpace);
-		body.localRotation = Quaternion.Slerp(currentRotation, camSpaceRotation, Time.deltaTime * rotationSpeed);
-		//body.localRotation = camSpaceRotation;*/
 	}
 
 	/*private void OnDrawGizmos() {
